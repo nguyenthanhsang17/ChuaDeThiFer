@@ -4,7 +4,7 @@ import ProductDetail from '../page/ProductDetail';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 const routers = [
     {
-        path: '/sang',
+        path: '/product/:id',
         element: (
             <ProductDetail />
         )
