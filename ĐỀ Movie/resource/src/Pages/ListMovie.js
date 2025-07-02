@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react'
-
+import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 export default function ListMovie() {
     const [movie, setMovie] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -9,6 +10,14 @@ export default function ListMovie() {
     const [Producer, setProducer] = useState([]);
     const [Director, setDirector] = useState([]);
     const [Star, setStar] = useState([]);
+    const navigate = useNavigate();
+
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const genre = searchParams.get('genre');
+    //console.log("Tin :" + genre);
+    const producer = searchParams.get('producer-id');
+    //console.log("Tin :" + producer);
 
     const fetchDirector = async () => {
         const response = await axios.get('http://localhost:9999/directors');
@@ -16,6 +25,7 @@ export default function ListMovie() {
         setDirector(data);
         console.log(data);
     }
+
 
     const fetchStar = async () => {
         const response = await axios.get('http://localhost:9999/stars');
@@ -43,6 +53,7 @@ export default function ListMovie() {
                 }
             })
         })
+
         setGenre(genreList);
         console.log(genreList);
     }
@@ -84,6 +95,10 @@ export default function ListMovie() {
         return starName;
     }
 
+    const ClickToGenre = async (genres) => {
+        navigate("/movie/?genre=" + genres);
+    }
+
     const SeachByGenre = async (genres) => {
         console.log(genres);
         const response = await axios.get('http://localhost:9999/movies');
@@ -99,12 +114,31 @@ export default function ListMovie() {
         setMovie(movie);
     }
 
+    const SeachByProducer = async (id) => {
+        const api = await axios.get("http://localhost:9999/movies?producer=" + id);
+        const data = api.data;
+        setMovie(data);
+    }
+
+    const ClickToProducer = (item) => {
+        navigate("/movie/?producer-id=" + item);
+    }
+
+
+
     useEffect(() => {
         fetchStar();
         fetchDirector();
         fetchGenre();
         fetchProducer();
-        fetchMovie();
+        if (genre) {
+            SeachByGenre(genre);
+        } else if (producer) {
+            SeachByProducer(producer);
+        } else {
+            fetchMovie();
+        }
+
     }, []);
 
     return (
@@ -116,8 +150,8 @@ export default function ListMovie() {
                     <div className='col-md-12 d-flex justify-content-center'>
                         {Genre ? (Genre.map((item, i) => {
                             return (
-                                <a key={i} href='#' className='m-2' onClick={() => {
-                                    SeachByGenre(item);
+                                <a key={i} href='' className='m-2' onClick={() => {
+                                    ClickToGenre(item);
                                 }}>{item}</a>
                             )
                         })) : ("")}
@@ -126,20 +160,22 @@ export default function ListMovie() {
             </div>
             <hr></hr>
             <div className='row'>
-                <div className='col-md-3 p-3'>
+                <div className='col-md-2 p-3'>
                     <h3>Producers</h3>
                     <ul>
                         {Producer ? (Producer.map((item, i) => {
                             return (
-                                <li> <a key={i} href='#' className='m-2'>{item.name}</a> </li>
+                                <li key={i}> <a href='' className='m-2' onClick={() => {
+                                    ClickToProducer(item.id);
+                                }}>{item.name}</a> </li>
                             )
                         })) : ("")}
                     </ul>
                 </div>
-                <div className='col-md-9'>
+                <div className='col-md-10'>
                     <h3 className='text-center'>List Of Movies</h3>
-                    <span><a href='#' className='m-2' onClick={() => {
-                        fetchMovie();
+                    <span><a href='' className='m-2' onClick={() => {
+                        navigate('/movie');
                     }}>Show ALL Movies</a></span>
                     <table className='table table-bordered table-striped'>
                         <thead>
@@ -176,9 +212,11 @@ export default function ListMovie() {
                                             </div>);
                                         })}</td>
                                         <td>{item.stars.map((item, i) => {
-                                            return (<div key={i} >{getStarname(item)}</div>)
+                                            return (<div key={i} >{i + 1} - {getStarname(item)}</div>)
                                         })}
-                                            <div className='text-end'><a href='#'>Add star</a></div>
+                                            <div className='text-end'><a href='' onClick={() => {
+                                                navigate(`/movie/${item.id}/add-stars`)
+                                            }} >Add star</a></div>
                                         </td>
                                     </tr>
                                 )
